@@ -1,5 +1,5 @@
 use axum::{Router, extract::ConnectInfo, http::StatusCode, response::IntoResponse, routing::get};
-use std::{fs, net::SocketAddr, path::PathBuf};
+use std::{fs, io::Write, net::SocketAddr, path::PathBuf};
 
 #[tokio::main]
 async fn main() {
@@ -19,11 +19,19 @@ async fn get_log(ConnectInfo(addr): ConnectInfo<SocketAddr>) -> impl IntoRespons
 
     match fs::read_to_string(&log_path) {
         Ok(contents) => {
-            println!("log read by {addr}");
-            let response = format!(
-                "{contents}[Log provider] Captured IP address: {}",
-                addr.ip()
-            );
+            let timestamp = chrono::Local::now().format("%H:%M:%S");
+            let log_entry = format!("[{timestamp}] [Log provider] Log read by {}\n", addr.ip());
+            // Print to stdout
+            print!("{log_entry}");
+            // Append to ./visits.log
+            if let Ok(mut file) = fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open("/data/logs/latest.log")
+            {
+                let _ = file.write_all(log_entry.as_bytes());
+            }
+            let response = format!("{contents}{log_entry}",);
             (StatusCode::OK, response)
         }
         Err(err) => (
