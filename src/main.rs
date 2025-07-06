@@ -20,7 +20,7 @@ async fn get_log(ConnectInfo(addr): ConnectInfo<SocketAddr>) -> impl IntoRespons
     match fs::read_to_string(&log_path) {
         Ok(contents) => {
             let timestamp = chrono::Local::now().format("%H:%M:%S");
-            let log_entry = format!("[{timestamp}] [Log provider] Log read by {}\n", addr.ip());
+            let log_entry = format!("[{timestamp}] [Log provider]: Log read by {}\n", addr.ip());
             // Print to stdout
             print!("{log_entry}");
             // Append to ./visits.log
